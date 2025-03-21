@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TixSwitch - Buy & Sell Movie Tickets</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; font-size: 18px; }
+        .header { background: #4CAF50; color: white; padding: 30px; text-align: center; font-size: 36px; }
+        .container { padding: 40px; }
+        .ticket { border: 3px solid #4CAF50; padding: 20px; margin: 20px 0; font-size: 20px; }
+        .message-box { padding: 20px; border: 1px solid #ddd; margin-top: 20px; font-size: 20px; }
+        .login { text-align: center; margin-top: 40px; }
+        .login input { font-size: 18px; padding: 15px; margin: 10px 0; width: 100%; box-sizing: border-box; }
+        .login button { 
+            font-size: 20px; 
+            padding: 15px 30px; 
+            margin: 10px;   
+            cursor: pointer; 
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
+            background-color: transparent;
+        }
+        .login button:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .hidden { display: none; }
+        .search-bar { padding: 10px; margin-bottom: 20px; width: 100%; font-size: 18px; }
+        .message { position: relative; margin-bottom: 10px; }
+        .message-options { 
+            display: none;
+            position: absolute;
+            right: 10px;
+            top: 0;
+            font-size: 18px;
+        }
+        .message:hover .message-options { 
+            display: block; 
+        }
+        .message-options button { 
+            display: block; 
+            margin-top: 5px;
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
+            background-color: transparent;
+        }
+        .message-options button:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .message button { 
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
+            background-color: transparent;
+            cursor: pointer;
+        }
+        .message button:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .ticket button { 
+            border: 2px solid #4CAF50;
+            color: #4CAF50;
+            background-color: transparent;
+            cursor: pointer;
+        }
+        .ticket button:hover {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .message-options button {
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TixSwitch</h1>
+    </div>
+    
+    <div class="container">
+        <!-- Login/Registration Section -->
+        <div class="login">
+            <h2>Register / Login</h2>
+            <input type="text" id="username" placeholder="Enter username">
+            <input type="password" id="password" placeholder="Enter password">
+            <button onclick="register()">Register</button>
+            <button onclick="login()">Login</button>
+        </div>
+        
+        <!-- Marketplace Section -->
+        <div class="marketplace hidden">
+            <h2>Available Listings</h2>
+            <input type="text" id="search-bar" class="search-bar" placeholder="Search Listings..." oninput="searchListings()">
+            <button onclick="createListing()">Create Listing</button>
+            <button onclick="viewMessages()">View Messages</button>
+            <div id="listings"></div>
+        </div>
+        
+        <!-- Messages Section -->
+        <div class="messages hidden">
+            <h2>Messages</h2>
+            <div class="message-box" id="message-box"></div>
+            <button onclick="backToMarketplace()">Back to Marketplace</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentUser = "";
+
+        function register() {
+            let username = document.getElementById("username").value;
+            let password = document.getElementById("password").value;
+            if (username && password) {
+                let accounts = JSON.parse(localStorage.getItem("accounts") || "{}");
+                if (accounts[username]) {
+                    alert("Username already taken!");
+                } else {
+                    accounts[username] = password;
+                    localStorage.setItem("accounts", JSON.stringify(accounts));
+                    alert("Account created! Please log in.");
+                }
+            }
+        }
+        
+        function login() {
+            let username = document.getElementById("username").value;
+            let password = document.getElementById("password").value;
+            let accounts = JSON.parse(localStorage.getItem("accounts") || "{}");
+            
+            if (accounts[username] && accounts[username] === password) {
+                currentUser = username;
+                alert("Logged in as " + username);
+                document.querySelector(".login").classList.add("hidden");
+                document.querySelector(".marketplace").classList.remove("hidden");
+                loadListings();
+            } else {
+                alert("Invalid login credentials!");
+            }
+        }
+
+        function createListing() {
+            if (!currentUser) {
+                alert("You must be logged in to create a listing!");
+                return;
+            }
+            let name = prompt("Enter the name of the item:");
+            let price = prompt("Enter the price:");
+            let imageUrl = prompt("Enter image URL:");
+
+            if (name && price && imageUrl) {
+                let listings = JSON.parse(localStorage.getItem("listings") || "[]");
+                listings.push({ name, price, imageUrl, seller: currentUser });
+                localStorage.setItem("listings", JSON.stringify(listings));
+                loadListings();
+            }
+        }
+
+        function loadListings() {
+            let listings = JSON.parse(localStorage.getItem("listings") || "[]");
+            let listingsDiv = document.getElementById("listings");
+            listingsDiv.innerHTML = "";
+
+            if (listings.length === 0) {
+                listingsDiv.innerHTML = "<p>No listings available.</p>";
+                return;
+            }
+
+            listings.forEach((listing, index) => {
+                let div = document.createElement("div");
+                div.className = "ticket";
+                div.innerHTML = `
+                    <img src="${listing.imageUrl}" alt="${listing.name}" width="100">
+                    <p><strong>Item:</strong> ${listing.name}</p>
+                    <p><strong>Price:</strong> $${listing.price}</p>
+                    <p><strong>Seller:</strong> ${listing.seller}</p>
+                    <button onclick="messageUser('${listing.seller}')">Message Seller</button>
+                    ${listing.seller === currentUser ? `<button onclick="removeListing(${index})">Remove Listing</button>` : ''}
+                `;
+                listingsDiv.appendChild(div);
+            });
+        }
+
+        function removeListing(index) {
+            let listings = JSON.parse(localStorage.getItem("listings") || "[]");
+            listings.splice(index, 1);
+            localStorage.setItem("listings", JSON.stringify(listings));
+            loadListings();
+        }
+
+        function searchListings() {
+            let searchTerm = document.getElementById("search-bar").value.toLowerCase();
+            let listings = JSON.parse(localStorage.getItem("listings") || "[]");
+            let listingsDiv = document.getElementById("listings");
+            listingsDiv.innerHTML = "";
+
+            listings.filter(listing => listing.name.toLowerCase().includes(searchTerm)).forEach((listing, index) => {
+                let div = document.createElement("div");
+                div.className = "ticket";
+                div.innerHTML = `
+                    <img src="${listing.imageUrl}" alt="${listing.name}" width="100">
+                    <p><strong>Item:</strong> ${listing.name}</p>
+                    <p><strong>Price:</strong> $${listing.price}</p>
+                    <p><strong>Seller:</strong> ${listing.seller}</p>
+                    <button onclick="messageUser('${listing.seller}')">Message Seller</button>
+                    ${listing.seller === currentUser ? `<button onclick="removeListing(${index})">Remove Listing</button>` : ''}
+                `;
+                listingsDiv.appendChild(div);
+            });
+        }
+
+        function messageUser(seller) {
+            if (!currentUser) {
+                alert("You must be logged in to message sellers!");
+                return;
+            }
+            let message = prompt("Enter your message:");
+            if (message) {
+                let messages = JSON.parse(localStorage.getItem("messages") || "[]");
+                messages.push({ sender: currentUser, receiver: seller, message });
+                localStorage.setItem("messages", JSON.stringify(messages));
+            }
+        }
+
+        function loadMessages() {
+            let messages = JSON.parse(localStorage.getItem("messages") || "[]");
+            let messageBox = document.getElementById("message-box");
+            messageBox.innerHTML = "";
+
+            let uniqueUsers = [...new Set(messages.map(msg => msg.sender === currentUser ? msg.receiver : msg.sender))].filter(user => user !== currentUser);
+
+            uniqueUsers.forEach(user => {
+                let userMessages = messages.filter(msg => (msg.sender === user && msg.receiver === currentUser) || (msg.receiver === user && msg.sender === currentUser));
+                let userDiv = document.createElement("div");
+                userDiv.innerHTML = `<h3>Messages with ${user}:</h3>`;
+
+                userMessages.forEach(msg => {
+                    let messageDiv = document.createElement("div");
+                    messageDiv.className = "message";
+                    messageDiv.innerHTML = `
+                        <p><strong>${msg.sender === currentUser ? "Me" : msg.sender}:</strong> ${msg.message} 
+                            ${msg.sender === currentUser ? `<span class="message-options">
+                                <button onclick="editMessage('${msg.sender}', '${msg.message}')">Edit</button>
+                                <button onclick="deleteMessage('${msg.sender}', '${msg.message}')">Delete</button>
+                            </span>` : ''}
+                            <button onclick="replyToMessage('${msg.sender}')">Reply</button>
+                        </p>`;
+                    userDiv.appendChild(messageDiv);
+                });
+                messageBox.appendChild(userDiv);
+            });
+        }
+
+        function editMessage(sender, oldMessage) {
+            let newMessage = prompt("Edit your message:", oldMessage);
+            if (newMessage !== null) {
+                let messages = JSON.parse(localStorage.getItem("messages") || "[]");
+                let message = messages.find(msg => msg.sender === sender && msg.message === oldMessage);
+                message.message = newMessage;
+                localStorage.setItem("messages", JSON.stringify(messages));
+                loadMessages();
+            }
+        }
+
+        function deleteMessage(sender, messageToDelete) {
+            let messages = JSON.parse(localStorage.getItem("messages") || "[]");
+            messages = messages.filter(msg => !(msg.sender === sender && msg.message === messageToDelete));
+            localStorage.setItem("messages", JSON.stringify(messages));
+            loadMessages();
+        }
+
+        function replyToMessage(sender) {
+            if (!currentUser) {
+                alert("You must be logged in to reply to messages!");
+                return;
+            }
+
+            let reply = prompt("Enter your reply:");
+            if (reply) {
+                let messages = JSON.parse(localStorage.getItem("messages") || "[]");
+                messages.push({ sender: currentUser, receiver: sender, message: reply });
+                localStorage.setItem("messages", JSON.stringify(messages));
+                loadMessages();
+            }
+        }
+
+        function backToMarketplace() {
+            document.querySelector(".messages").classList.add("hidden");
+            document.querySelector(".marketplace").classList.remove("hidden");
+        }
+
+        function viewMessages() {
+            document.querySelector(".marketplace").classList.add("hidden");
+            document.querySelector(".messages").classList.remove("hidden");
+            loadMessages();
+        }
+    </script>
+</body>
+</html>
