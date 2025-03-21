@@ -72,6 +72,43 @@
         .message-options button {
             margin-top: 5px;
         }
+        /* About Us Section */
+        .about-us-container {
+            text-align: center;
+            margin-top: 50px;
+        }
+        #aboutUsBtn {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #aboutUsBtn:hover {
+            background-color: #218838;
+        }
+        #aboutUsContent {
+            display: none;
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #555;
+        }
+        /* Footer Section */
+        footer button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        footer button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -104,8 +141,21 @@
             <div class="message-box" id="message-box"></div>
             <button onclick="backToMarketplace()">Back to Marketplace</button>
         </div>
+
+        <!-- About Us Section -->
+        <div class="about-us-container">
+            <button id="aboutUsBtn">About Us</button>
+            <div id="aboutUsContent">
+                <p>We are a group of 8th grade students from Greece. This website was made for a school project. Here, you can find tickets for movies and concerts that you won't find anywhere else!</p>
+            </div>
+        </div>
+
     </div>
     
+    <footer>
+        <button onclick="openReplyPrompt()">Reply</button>
+    </footer>
+
     <script>
         let currentUser = "";
 
@@ -218,70 +268,46 @@
             let message = prompt("Enter your message:");
             if (message) {
                 let messages = JSON.parse(localStorage.getItem("messages") || "[]");
-                messages.push({ sender: currentUser, receiver: seller, message });
+                messages.push({ buyer: currentUser, seller, message });
                 localStorage.setItem("messages", JSON.stringify(messages));
+                alert("Message sent to " + seller);
             }
         }
 
-        function loadMessages() {
+        function viewMessages() {
+            if (!currentUser) {
+                alert("You must be logged in to view messages!");
+                return;
+            }
+
             let messages = JSON.parse(localStorage.getItem("messages") || "[]");
             let messageBox = document.getElementById("message-box");
             messageBox.innerHTML = "";
 
-            let uniqueUsers = [...new Set(messages.map(msg => msg.sender === currentUser ? msg.receiver : msg.sender))].filter(user => user !== currentUser);
-
-            uniqueUsers.forEach(user => {
-                let userMessages = messages.filter(msg => (msg.sender === user && msg.receiver === currentUser) || (msg.receiver === user && msg.sender === currentUser));
-                let userDiv = document.createElement("div");
-                userDiv.innerHTML = `<h3>Messages with ${user}:</h3>`;
-
-                userMessages.forEach(msg => {
-                    let messageDiv = document.createElement("div");
-                    messageDiv.className = "message";
-                    messageDiv.innerHTML = `
-                        <p><strong>${msg.sender === currentUser ? "Me" : msg.sender}:</strong> ${msg.message} 
-                            ${msg.sender === currentUser ? `<span class="message-options">
-                                <button onclick="editMessage('${msg.sender}', '${msg.message}')">Edit</button>
-                                <button onclick="deleteMessage('${msg.sender}', '${msg.message}')">Delete</button>
-                            </span>` : ''}
-                            <button onclick="replyToMessage('${msg.sender}')">Reply</button>
-                        </p>`;
-                    userDiv.appendChild(messageDiv);
-                });
-                messageBox.appendChild(userDiv);
+            messages.filter(msg => msg.buyer === currentUser || msg.seller === currentUser).forEach(msg => {
+                let div = document.createElement("div");
+                div.className = "message";
+                div.innerHTML = `
+                    <p><strong>${msg.buyer} to ${msg.seller}:</strong> ${msg.message}</p>
+                    <div class="message-options">
+                        <button onclick="replyToMessage('${msg.buyer}', '${msg.seller}', '${msg.message}')">Reply</button>
+                    </div>
+                `;
+                messageBox.appendChild(div);
             });
+
+            document.querySelector(".messages").classList.remove("hidden");
+            document.querySelector(".marketplace").classList.add("hidden");
         }
 
-        function editMessage(sender, oldMessage) {
-            let newMessage = prompt("Edit your message:", oldMessage);
-            if (newMessage !== null) {
-                let messages = JSON.parse(localStorage.getItem("messages") || "[]");
-                let message = messages.find(msg => msg.sender === sender && msg.message === oldMessage);
-                message.message = newMessage;
-                localStorage.setItem("messages", JSON.stringify(messages));
-                loadMessages();
-            }
-        }
-
-        function deleteMessage(sender, messageToDelete) {
-            let messages = JSON.parse(localStorage.getItem("messages") || "[]");
-            messages = messages.filter(msg => !(msg.sender === sender && msg.message === messageToDelete));
-            localStorage.setItem("messages", JSON.stringify(messages));
-            loadMessages();
-        }
-
-        function replyToMessage(sender) {
-            if (!currentUser) {
-                alert("You must be logged in to reply to messages!");
-                return;
-            }
-
-            let reply = prompt("Enter your reply:");
+        function replyToMessage(buyer, seller, originalMessage) {
+            let reply = prompt("Enter your reply to the message:");
             if (reply) {
                 let messages = JSON.parse(localStorage.getItem("messages") || "[]");
-                messages.push({ sender: currentUser, receiver: sender, message: reply });
+                messages.push({ buyer: seller, seller: buyer, message: reply });
                 localStorage.setItem("messages", JSON.stringify(messages));
-                loadMessages();
+                alert("Your reply has been sent!");
+                viewMessages();
             }
         }
 
@@ -290,10 +316,17 @@
             document.querySelector(".marketplace").classList.remove("hidden");
         }
 
-        function viewMessages() {
-            document.querySelector(".marketplace").classList.add("hidden");
-            document.querySelector(".messages").classList.remove("hidden");
-            loadMessages();
+        // About Us functionality
+        document.getElementById("aboutUsBtn").addEventListener("click", function() {
+            let aboutContent = document.getElementById("aboutUsContent");
+            aboutContent.style.display = aboutContent.style.display === "none" ? "block" : "none";
+        });
+
+        function openReplyPrompt() {
+            let reply = prompt("Enter your message:");
+            if (reply) {
+                alert("Reply sent: " + reply);
+            }
         }
     </script>
 </body>
