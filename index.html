@@ -12,20 +12,25 @@
         .message-box { padding: 20px; border: 1px solid #ddd; margin-top: 20px; font-size: 20px; }
         .login { text-align: center; margin-top: 40px; }
         .login input { font-size: 18px; padding: 15px; margin: 10px 0; width: 100%; box-sizing: border-box; }
-        .login button { 
-            font-size: 20px; 
-            padding: 15px 30px; 
-            margin: 10px;   
-            cursor: pointer; 
+        
+        /* Updated Button Style */
+        button {
+            font-size: 20px;
+            padding: 15px 30px;
+            margin: 10px;
+            cursor: pointer;
             border: 2px solid #28a745;
             color: #28a745;
             background-color: transparent;
             border-radius: 5px;
+            transition: all 0.3s ease;
         }
-        .login button:hover {
-            background-color: #218838;
+
+        button:hover {
+            background-color: #28a745;
             color: white;
         }
+
         .hidden { display: none; }
         .search-bar { padding: 10px; margin-bottom: 20px; width: 100%; font-size: 18px; }
         .message { position: relative; margin-bottom: 10px; }
@@ -42,25 +47,6 @@
         .message-options button { 
             display: block; 
             margin-top: 5px;
-            border: 2px solid #28a745;
-            color: #28a745;
-            background-color: transparent;
-            border-radius: 5px;
-        }
-        .message-options button:hover {
-            background-color: #28a745;
-            color: white;
-        }
-        .message button { 
-            border: 2px solid #28a745;
-            color: #28a745;
-            background-color: transparent;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        .message button:hover {
-            background-color: #28a745;
-            color: white;
         }
         .ticket button { 
             border: 2px solid #28a745;
@@ -73,6 +59,7 @@
             background-color: #28a745;
             color: white;
         }
+
         /* About Us Section */
         .about-us-container {
             text-align: center;
